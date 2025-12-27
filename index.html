@@ -1,0 +1,1943 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>Jessie Math - 分數拼拼樂 </title>
+
+  <!-- Fonts / Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+  <style>
+    :root{
+      --bg:#f5f7ff;
+      --card:#ffffff;
+      --ink:#0f172a;
+      --muted:rgba(15,23,42,.62);
+      --line:rgba(15,23,42,.12);
+
+      --brand:#5f73ff;
+      --brand2:#eef2ff;
+      --yellow:#ffd34a;
+
+      --good:#16a34a;
+      --bad:#ef4444;
+      --warn:#f59e0b;
+
+      --shadow: 0 18px 0 rgba(15,23,42,.10);
+      --radius: 18px;
+
+      --max: 1100px;
+      --gameMax: 980px;
+
+      --px: 3px;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","Plus Jakarta Sans",sans-serif;
+      color:var(--ink);
+      min-height:100vh;
+      background:
+        radial-gradient(900px 420px at 15% -10%, rgba(95,115,255,.18), transparent 60%),
+        radial-gradient(900px 420px at 90% -10%, rgba(255,211,74,.22), transparent 55%),
+        linear-gradient(180deg, #f5f7ff 0%, #ffffff 100%);
+      overflow-x:hidden;
+    }
+    a{color:inherit;text-decoration:none}
+    button{font-family:inherit}
+
+    .scrollBg{
+      position:fixed; inset:0; z-index:-1;
+      opacity:.35;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(15,23,42,.10) 1px, transparent 2px) 0 0/220px 180px,
+        radial-gradient(circle at 70% 60%, rgba(15,23,42,.08) 1px, transparent 2px) 0 0/260px 200px,
+        linear-gradient(90deg, rgba(95,115,255,.14), rgba(255,211,74,.12), rgba(95,115,255,.14)) 0 0/520px 100%,
+        linear-gradient(90deg, rgba(15,23,42,.06) 1px, transparent 1px) 0 0/26px 26px,
+        linear-gradient(180deg, rgba(15,23,42,.05) 1px, transparent 1px) 0 0/26px 26px;
+      animation:bgScroll 18s linear infinite;
+      transform:translateZ(0);
+    }
+    @keyframes bgScroll{
+      from{ background-position: 0 0, 0 0, 0 0, 0 0, 0 0; }
+      to  { background-position: -520px 0, -260px 0, -520px 0, -260px 0, -260px 0; }
+    }
+
+    /* ===== 分數上下表示（含空格分子）===== */
+    .frac{
+      display:inline-grid;
+      grid-template-rows:auto auto auto;
+      align-items:center;
+      justify-items:center;
+      line-height:1.05;
+      font-weight:1000;
+      font-variant-numeric: tabular-nums;
+      vertical-align:middle;
+      min-width: 1.6em;
+    }
+    .frac .top{padding:0 6px 2px;font-size:.98em}
+    .frac .bar{width:100%;height:2px;background:rgba(15,23,42,.55);border-radius:999px}
+    .frac .bottom{padding:2px 6px 0;font-size:.98em}
+    .frac.big .top, .frac.big .bottom{font-size:1.05em}
+    .frac.soft .bar{background:rgba(15,23,42,.35)}
+
+    .frac.blank .top{min-width:2.4em;padding:2px 10px 4px}
+    .frac.blank .blankBox{
+      display:inline-block;height:1.05em;width:2.2em;
+      border-radius:10px;
+      border: var(--px) solid rgba(15,23,42,.14);
+      background: rgba(255,255,255,.75);
+      box-shadow: 6px 6px 0 rgba(15,23,42,.08);
+      position:relative;overflow:hidden;
+    }
+    .frac.blank .blankBox::after{
+      content:"";position:absolute;inset:-40px;
+      background:
+        linear-gradient(90deg, rgba(95,115,255,.14) 1px, transparent 1px) 0 0/14px 14px,
+        linear-gradient(180deg, rgba(255,211,74,.10) 1px, transparent 1px) 0 0/14px 14px;
+      transform: rotate(10deg);
+      opacity:.35;
+      pointer-events:none;
+    }
+
+    /* Top bar */
+    .topbar{
+      position:sticky;top:0;z-index:60;
+      background:rgba(255,255,255,.82);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid rgba(15,23,42,.10);
+    }
+    .topbarIn{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:12px 16px;
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+    }
+    .brandLeft{display:flex;align-items:center;gap:12px;min-width:220px}
+    .avatarRing{
+      width:46px;height:46px;border-radius:14px;
+      background: linear-gradient(180deg, rgba(255,211,74,.98), rgba(255,211,74,.72));
+      border: var(--px) solid rgba(15,23,42,.18);
+      box-shadow: 6px 6px 0 rgba(15,23,42,.10);
+      display:grid;place-items:center;
+      overflow:hidden;flex:0 0 auto;
+    }
+    .avatarRing img{width:38px;height:38px;object-fit:contain;filter: drop-shadow(0 6px 10px rgba(15,23,42,.18))}
+    .brandTxt{display:flex;flex-direction:column;line-height:1.05}
+    .brandTxt .name{
+      font-family:"Fredoka","Noto Sans TC",sans-serif;
+      font-weight:900;font-size:18px;letter-spacing:.3px;
+    }
+    .brandTxt .sub{font-size:12px;color:rgba(15,23,42,.60);font-weight:900}
+
+    .navLinks{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .navLink{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 12px;border-radius:14px;
+      background:rgba(15,23,42,.04);
+      border: var(--px) solid rgba(15,23,42,.10);
+      box-shadow: 6px 6px 0 rgba(15,23,42,.10);
+      font-weight:1000;font-size:13px;
+      transition:.14s transform;
+      user-select:none;
+    }
+    .navLink i{color:rgba(95,115,255,.95)}
+    .navLink:hover{transform:translateY(-1px)}
+    .navLink.primary{background:rgba(95,115,255,.10);border-color:rgba(95,115,255,.22)}
+
+    .wrap{max-width:var(--max);margin:0 auto;padding:18px 16px 40px}
+    .pageCard{
+      background:rgba(255,255,255,.88);
+      border: var(--px) solid rgba(15,23,42,.10);
+      box-shadow: 10px 10px 0 rgba(15,23,42,.10);
+      border-radius: var(--radius);
+      overflow:hidden;
+    }
+    .pagePad{padding:18px}
+    .pageGrid{display:grid;grid-template-columns: 1.2fr .8fr;gap:16px;align-items:start}
+    @media (max-width: 920px){ .pageGrid{grid-template-columns:1fr} }
+
+    .h1{
+      font-family:"Fredoka","Noto Sans TC",sans-serif;
+      font-weight:1000;font-size:34px;letter-spacing:.4px;line-height:1.1;
+    }
+    @media (max-width: 520px){ .h1{font-size:28px} }
+    .lead{margin-top:10px;color:rgba(15,23,42,.64);font-weight:900;line-height:1.75}
+    .sep{height:1px;background:rgba(15,23,42,.10);margin:14px 0}
+
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .field{
+      display:flex;align-items:center;gap:10px;
+      padding:12px 12px;border-radius:14px;
+      border: var(--px) solid rgba(15,23,42,.10);
+      background:rgba(15,23,42,.04);
+      box-shadow: 6px 6px 0 rgba(15,23,42,.10);
+      flex:1; min-width:240px;
+    }
+    .field i{color:rgba(95,115,255,.95)}
+    input[type="text"]{
+      border:none;outline:none;background:transparent;
+      font-size:15px;font-weight:1000;color:var(--ink);
+      width:100%;
+    }
+
+    .btn{
+      border:none;cursor:pointer;
+      padding:12px 14px;border-radius:14px;
+      font-weight:1000;
+      display:inline-flex;align-items:center;gap:10px;
+      user-select:none;
+      transition:.14s transform;
+      justify-content:center;
+      min-height:48px;
+      border: var(--px) solid rgba(15,23,42,.10);
+      box-shadow: 6px 6px 0 rgba(15,23,42,.10);
+      background:rgba(15,23,42,.04);
+      color:var(--ink);
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btnSolid{
+      background: linear-gradient(180deg, rgba(95,115,255,.98), rgba(95,115,255,.78));
+      border-color: rgba(95,115,255,.30);
+      color:#fff;
+    }
+    .btnGhost{ background:rgba(15,23,42,.04); }
+    .btnDanger{
+      background:rgba(239,68,68,.08);
+      border-color:rgba(239,68,68,.22);
+      color:#7f1d1d;
+    }
+
+    select{
+      appearance:none;
+      border: var(--px) solid rgba(15,23,42,.10);
+      background:rgba(15,23,42,.04);
+      padding:12px 12px;border-radius:14px;
+      font-weight:1000;color:var(--ink);
+      outline:none;
+      width:100%;
+      min-height:48px;
+      box-shadow: 6px 6px 0 rgba(15,23,42,.10);
+    }
+    .selectWrap{position:relative;min-width:180px;flex:1}
+    .selectWrap i{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:rgba(15,23,42,.45);pointer-events:none}
+
+    .screen{display:none}
+    .screen.active{display:block}
+
+    /* Leaderboard */
+    .sideCard{
+      border-radius:var(--radius);
+      border: var(--px) solid rgba(15,23,42,.10);
+      background:rgba(255,255,255,.85);
+      box-shadow: 10px 10px 0 rgba(15,23,42,.10);
+      overflow:hidden;
+    }
+    .sideHd{
+      padding:16px 16px 12px;
+      border-bottom:1px dashed rgba(15,23,42,.12);
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+    }
+    .sideHd .t{font-weight:1000;display:flex;align-items:center;gap:10px}
+    .sideHd .t i{color:rgba(95,115,255,.95)}
+    .sideBd{padding:14px}
+    .lbControls{display:flex;gap:10px;flex-wrap:wrap}
+    .lbList{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+    .lbItem{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:12px 12px;border-radius:14px;
+      border: var(--px) solid rgba(15,23,42,.10);
+      background:rgba(15,23,42,.04);
+      box-shadow: 6px 6px 0 rgba(15,23,42,.10);
+    }
+    .lbLeft{display:flex;align-items:center;gap:10px;min-width:0}
+    .rank{
+      width:32px;height:32px;border-radius:10px;
+      display:grid;place-items:center;
+      font-weight:1000;
+      background:rgba(255,211,74,.24);
+      border: var(--px) solid rgba(255,211,74,.40);
+      flex:0 0 auto;
+    }
+    .lbName{font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+    .lbMeta{font-size:12px;color:rgba(15,23,42,.60);font-weight:900;margin-top:2px}
+    .lbRight{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+    .lbScore{font-weight:1000}
+    .lbStars{font-weight:1000;color:#b45309}
+
+    /* Menu cards */
+    .levelList{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
+    .levelCard{
+      border-radius:16px;
+      border: var(--px) solid rgba(15,23,42,.10);
+      background:rgba(15,23,42,.03);
+      padding:14px;
+      box-shadow: 10px 10px 0 rgba(15,23,42,.10);
+      position:relative;
+      overflow:hidden;
+    }
+    .levelCard::before{
+      content:"";
+      position:absolute; inset:-40px;
+      background:
+        linear-gradient(90deg, rgba(95,115,255,.14) 1px, transparent 1px) 0 0/18px 18px,
+        linear-gradient(180deg, rgba(255,211,74,.12) 1px, transparent 1px) 0 0/18px 18px;
+      transform: rotate(8deg);
+      opacity:.45;
+      pointer-events:none;
+    }
+    .lvTitle{position:relative;font-weight:1000;font-size:16px;display:flex;align-items:center;gap:10px}
+    .lvTitle i{color:rgba(95,115,255,.95)}
+    .lvDesc{position:relative;color:rgba(15,23,42,.62);font-size:13px;font-weight:900;line-height:1.55;margin-top:8px}
+    .lvPick{position:relative;margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .lvPick .btn{flex:1;min-width:140px}
+
+    /* GAME */
+    .gameShell{max-width:var(--gameMax);margin:0 auto}
+    .hudRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .stat{
+      border-radius:14px;
+      border: var(--px) solid rgba(15,23,42,.10);
+      background:rgba(255,255,255,.85);
+      padding:10px 12px;
+      display:flex;align-items:center;gap:10px;
+      font-weight:1000;
+      box-shadow: 6px 6px 0 rgba(15,23,42,.10);
+    }
+    .stat i{color:rgba(95,115,255,.95)}
+    .stat .small{font-size:12px;color:rgba(15,23,42,.56);font-weight:900}
+    .timer{font-variant-numeric: tabular-nums}
+    .timer.good{color:var(--good)}
+    .timer.warn{color:var(--warn)}
+    .timer.bad{color:var(--bad)}
+    .progress{
+      height:12px;border-radius:14px;
+      background:rgba(15,23,42,.06);
+      overflow:hidden;
+      border: var(--px) solid rgba(15,23,42,.10);
+      margin-bottom:12px;
+      box-shadow: 6px 6px 0 rgba(15,23,42,.10);
+    }
+    .bar{
+      height:100%;
+      width:100%;
+      background: linear-gradient(90deg, rgba(95,115,255,.95), rgba(255,211,74,.95));
+      transform-origin:left center;
+    }
+
+    .arena{
+      border-radius:16px;
+      border: var(--px) solid rgba(15,23,42,.10);
+      background:rgba(255,255,255,.86);
+      box-shadow: 12px 12px 0 rgba(15,23,42,.10);
+      padding:14px;
+      position:relative;
+      overflow:hidden;
+    }
+    .arena::before{
+      content:"";
+      position:absolute; left:-20px; right:-20px; bottom:10px; height:60px;
+      background:
+        linear-gradient(90deg, rgba(255,211,74,.22) 8px, transparent 8px) 0 0/24px 24px,
+        linear-gradient(180deg, rgba(15,23,42,.08), transparent);
+      opacity:.55;
+      pointer-events:none;
+      transform:skewX(-8deg);
+    }
+
+    .qaGrid{display:grid;grid-template-columns: 1.05fr .95fr;gap:12px;align-items:stretch;position:relative}
+    @media (max-width: 860px){ .qaGrid{grid-template-columns:1fr} }
+
+    .panel{
+      border-radius:16px;
+      border: var(--px) solid rgba(15,23,42,.10);
+      background:rgba(15,23,42,.03);
+      padding:14px;
+      box-shadow: 10px 10px 0 rgba(15,23,42,.10);
+      position:relative;
+      overflow:hidden;
+    }
+    .qTitle{font-weight:1000;font-size:15px;display:flex;align-items:center;gap:10px}
+    .qTitle i{color:rgba(95,115,255,.95)}
+    .qText{margin-top:10px;font-size:18px;font-weight:1000;line-height:1.55}
+
+    /* 左半邊畫圖 */
+    .stage{
+      width:100%;
+      aspect-ratio: 1/1;
+      border-radius:14px;
+      border: var(--px) solid rgba(15,23,42,.10);
+      background:
+        linear-gradient(180deg, rgba(95,115,255,.10), rgba(255,255,255,.60)),
+        linear-gradient(90deg, rgba(15,23,42,.06) 1px, transparent 1px) 0 0/18px 18px,
+        linear-gradient(180deg, rgba(15,23,42,.05) 1px, transparent 1px) 0 0/18px 18px;
+      box-shadow: 10px 10px 0 rgba(15,23,42,.10);
+      overflow:hidden;
+      position:relative;
+      display:flex;align-items:center;justify-content:center;
+      padding:12px;
+    }
+    .drawShell{width:100%;height:100%;display:flex;flex-direction:column;gap:10px;justify-content:center;}
+    .drawTop{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+    .drawLabel{font-weight:1000;display:flex;align-items:center;gap:10px;}
+    .chip{
+      padding:6px 10px;border-radius:999px;
+      background:rgba(255,211,74,.22);
+      border: var(--px) solid rgba(255,211,74,.40);
+      box-shadow: 6px 6px 0 rgba(15,23,42,.10);
+      font-weight:1000;font-size:12px;white-space:nowrap;
+    }
+    .drawHint{font-size:12px;font-weight:900;color:rgba(15,23,42,.62);}
+    .drawBoard{display:grid;gap:10px;grid-template-columns:1fr;}
+
+    .barWrap{
+      border-radius:14px;
+      border: var(--px) solid rgba(15,23,42,.10);
+      background:rgba(255,255,255,.80);
+      box-shadow: 8px 8px 0 rgba(15,23,42,.10);
+      padding:10px;
+      display:flex;flex-direction:column;gap:8px;
+    }
+    .barTitle{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:1000}
+    .barTitle small{color:rgba(15,23,42,.62);font-weight:900}
+    .barGrid{
+      display:grid;
+      grid-auto-flow:column;
+      grid-auto-columns: 1fr;
+      gap:6px;
+      align-items:stretch;
+      height:54px;
+    }
+    .seg{
+      border-radius:10px;
+      border: var(--px) solid rgba(15,23,42,.10);
+      background:rgba(15,23,42,.04);
+      box-shadow: 4px 4px 0 rgba(15,23,42,.08);
+      cursor:pointer;
+      position:relative;
+      overflow:hidden;
+      user-select:none;
+      transition:transform .06s;
+    }
+    .seg:active{transform:translateY(1px)}
+    .seg.on{
+      background:rgba(95,115,255,.20);
+      border-color:rgba(95,115,255,.26);
+    }
+    .seg.on::after{
+      content:"";
+      position:absolute; inset:-40px;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.34) 1px, transparent 1px) 0 0/12px 12px,
+        linear-gradient(180deg, rgba(255,255,255,.28) 1px, transparent 1px) 0 0/12px 12px;
+      transform:rotate(10deg);
+      opacity:.55;
+      pointer-events:none;
+    }
+    .seg.locked{cursor:not-allowed;filter:saturate(.9) contrast(.98)}
+
+    /* 右半邊答題區 */
+    .rightCard{height:100%;display:flex;flex-direction:column}
+    .choices{display:grid;grid-template-columns: 1fr;gap:10px;margin-top:12px}
+    .choiceBtn{
+      width:100%;
+      text-align:left;
+      border-radius:14px;
+      border: var(--px) solid rgba(15,23,42,.10);
+      background:rgba(255,255,255,.85);
+      padding:14px 14px;
+      font-weight:1000;
+      cursor:pointer;
+      transition:.14s transform;
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      min-height:56px;
+      box-shadow: 8px 8px 0 rgba(15,23,42,.10);
+      position:relative;
+      overflow:hidden;
+    }
+    .choiceBtn::before{
+      content:"";
+      position:absolute; inset:-40px;
+      background:
+        linear-gradient(90deg, rgba(95,115,255,.14) 1px, transparent 1px) 0 0/14px 14px,
+        linear-gradient(180deg, rgba(255,211,74,.10) 1px, transparent 1px) 0 0/14px 14px;
+      transform: rotate(10deg);
+      opacity:.35;
+      pointer-events:none;
+    }
+    .choiceBtn:hover{transform:translateY(-1px)}
+    .choiceBtn.correct{border-color:rgba(22,163,74,.30);background:rgba(22,163,74,.08)}
+    .choiceBtn.wrong{border-color:rgba(239,68,68,.30);background:rgba(239,68,68,.06)}
+    .kbd{
+      font-size:12px;color:rgba(15,23,42,.60);font-weight:1000;
+      padding:6px 10px;border-radius:999px;
+      border: var(--px) solid rgba(15,23,42,.10);
+      background:rgba(15,23,42,.04);
+      white-space:nowrap;
+    }
+
+    .drawSubmitBox{
+      margin-top:12px;
+      border-radius:14px;
+      border: var(--px) solid rgba(15,23,42,.10);
+      background:rgba(255,255,255,.85);
+      padding:12px;
+      box-shadow: 6px 6px 0 rgba(15,23,42,.10);
+      display:flex;flex-direction:column;gap:10px;
+    }
+    .drawCounts{
+      display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;
+      font-weight:1000;color:rgba(15,23,42,.82);
+    }
+    .pill{
+      padding:8px 10px;border-radius:999px;
+      border: var(--px) solid rgba(15,23,42,.10);
+      background:rgba(15,23,42,.04);
+      box-shadow: 6px 6px 0 rgba(15,23,42,.10);
+      font-size:12px;white-space:nowrap;
+    }
+    .pill b{color:#b45309}
+
+    .feed{
+      margin-top:12px;border-radius:14px;
+      border: var(--px) solid rgba(15,23,42,.10);
+      background:rgba(255,255,255,.85);
+      padding:12px;
+      display:none;
+      box-shadow: 6px 6px 0 rgba(15,23,42,.10);
+    }
+    .feed.show{display:block}
+    .feed.good{border-color:rgba(22,163,74,.26);background:rgba(22,163,74,.06)}
+    .feed.bad{border-color:rgba(239,68,68,.22);background:rgba(239,68,68,.05)}
+    .feedTop{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .feedMsg{font-weight:1000;display:flex;align-items:center;gap:10px}
+    .explain{margin-top:8px;font-size:13px;font-weight:900;line-height:1.7;color:rgba(15,23,42,.86)}
+    .explain b{font-weight:1000;color:#b45309}
+
+    .bottomBar{
+      max-width:var(--gameMax);
+      margin:14px auto 0;
+      display:flex;gap:10px;flex-wrap:wrap;
+    }
+    .bottomBar .btn{flex:1;min-width:160px}
+
+    .overlay{
+      position:fixed;inset:0;z-index:200;
+      background:rgba(15,23,42,.35);
+      display:none;align-items:center;justify-content:center;
+      padding:18px;
+    }
+    .overlay.show{display:flex}
+    .pauseCard{
+      max-width:520px;width:100%;
+      border-radius:16px;
+      background:rgba(255,255,255,.92);
+      border: var(--px) solid rgba(15,23,42,.12);
+      box-shadow: 14px 14px 0 rgba(15,23,42,.12);
+      padding:16px;
+    }
+    .pauseTitle{font-weight:1000;font-size:18px;display:flex;align-items:center;gap:10px}
+    .pauseTitle i{color:rgba(95,115,255,.95)}
+    .pauseSub{margin-top:8px;color:rgba(15,23,42,.62);font-weight:900;line-height:1.7}
+    .pauseBtns{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .pauseBtns .btn{min-width:140px}
+
+    .toast{
+      position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
+      background:rgba(15,23,42,.86);
+      color:#fff;
+      padding:10px 12px;
+      border-radius:999px;
+      font-weight:1000;
+      border: var(--px) solid rgba(255,255,255,.18);
+      box-shadow: 10px 10px 0 rgba(15,23,42,.20);
+      display:none;
+      z-index:300;
+      max-width:min(560px, calc(100vw - 24px));
+      text-align:center;
+    }
+    .toast.show{display:block}
+  </style>
+</head>
+
+<body>
+  <div class="scrollBg" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="topbarIn">
+      <div class="brandLeft">
+        <div class="avatarRing" title="Jessie Math">
+          <img src="JESSIEMATH-Q.png" alt="Jessie Math Logo">
+        </div>
+        <div class="brandTxt">
+          <div class="name">Jessie Math</div>
+          <div class="sub">三年級｜主題八 分數｜Lv2 可消除｜Lv3 兩步驟</div>
+        </div>
+      </div>
+
+      <nav class="navLinks">
+        <a class="navLink" href="https://jessiemath0703-chu.github.io/website2/" target="_blank" rel="noopener">
+          <i class="fa-solid fa-house"></i><span>首頁</span>
+        </a>
+        <a class="navLink" href="https://jessiemath0703-chu.github.io/Game-Lobby/" target="_blank" rel="noopener">
+          <i class="fa-solid fa-gamepad"></i><span>遊戲大廳</span>
+        </a>
+        <a class="navLink primary" href="https://jessiemath0703-chu.github.io/Game-Lobby/#g3-u8" target="_blank" rel="noopener">
+          <i class="fa-solid fa-arrow-rotate-left"></i><span>三年級分數</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- SCREEN 1 -->
+    <section id="screenIntro" class="screen active">
+      <div class="pageCard">
+        <div class="pagePad pageGrid">
+          <div>
+            <div class="h1">分數拼拼樂</div>
+            <div class="lead">
+              輸入代號（名字），60 秒極限挑戰！<br>
+              答對 +5 秒｜答錯 -5 秒｜連擊倍率 Combo｜時間到才寫入榮譽榜。
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="row">
+              <div class="field">
+                <i class="fa-solid fa-user"></i>
+                <input id="nameInput" type="text" maxlength="14" placeholder="輸入暱稱（必填）" autocomplete="off" />
+              </div>
+              <button id="btnIntroGo" class="btn btnSolid"><i class="fa-solid fa-arrow-right"></i>下一步</button>
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="lead" style="font-size:13px">
+              <b>遊戲小規則</b><br>
+              • Lv1：看圖選答案。<br>
+              • Lv2：畫圖作答。<br>
+              • Lv3：先畫圖，再回答比較。<br>
+              • ESC 暫停/繼續。
+            </div>
+          </div>
+
+          <aside class="sideCard">
+            <div class="sideHd">
+              <div class="t"><i class="fa-solid fa-ranking-star"></i>榮譽榜</div>
+              <button id="btnClearLB" class="btn btnGhost" title="清除本機排行榜"><i class="fa-solid fa-broom"></i>清除</button>
+            </div>
+            <div class="sideBd">
+              <div class="lbControls">
+                <div class="selectWrap">
+                  <select id="lbFilter">
+                    <option value="ALL" selected>顯示：全部關卡</option>
+                    <option value="L1">第一關｜幾分之幾</option>
+                    <option value="L2">第二關｜畫圖補分子</option>
+                    <option value="L3">第三關｜畫圖同分母比較</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="selectWrap">
+                  <select id="lbDiffFilter">
+                    <option value="ALL" selected>難度：全部</option>
+                    <option value="easy">簡單</option>
+                    <option value="normal">普通</option>
+                    <option value="hard">困難</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down"></i>
+                </div>
+              </div>
+              <div class="lbList" id="lbList"></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 2 -->
+    <section id="screenMenu" class="screen">
+      <div class="pageCard">
+        <div class="pagePad pageGrid">
+          <div>
+            <div class="h1">選擇關卡</div>
+            <div class="lead">嗨，<span id="menuName">—</span>！選一關就開打。</div>
+
+            <div class="levelList">
+              <div class="levelCard">
+                <div class="lvTitle"><i class="fa-solid fa-pizza-slice"></i>Lv 1：幾分之幾</div>
+                <div class="lvDesc">看圖分割與塗色，判斷「幾分之幾」。</div>
+                <div class="lvPick">
+                  <div class="selectWrap">
+                    <select class="selDiff" data-level="L1">
+                      <option value="easy">難度｜簡單</option>
+                      <option value="normal" selected>難度｜普通</option>
+                      <option value="hard">難度｜困難</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down"></i>
+                  </div>
+                  <div class="selectWrap">
+                    <select class="selSpeed" data-level="L1">
+                      <option value="chill">速度｜悠閒</option>
+                      <option value="normal" selected>速度｜一般</option>
+                      <option value="fast">速度｜閃電</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down"></i>
+                  </div>
+                  <button class="btn btnSolid btnStart" data-level="L1"><i class="fa-solid fa-play"></i>開始</button>
+                </div>
+              </div>
+
+              <div class="levelCard">
+                <div class="lvTitle"><i class="fa-solid fa-eraser"></i>Lv 2：畫圖補分子</div>
+                <div class="lvDesc">分子、分母 ≤ 20，全部真分數。左邊分母已切好：<b>可以點回去消除</b>。</div>
+                <div class="lvPick">
+                  <div class="selectWrap">
+                    <select class="selDiff" data-level="L2">
+                      <option value="easy">難度｜簡單</option>
+                      <option value="normal" selected>難度｜普通</option>
+                      <option value="hard">難度｜困難</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down"></i>
+                  </div>
+                  <div class="selectWrap">
+                    <select class="selSpeed" data-level="L2">
+                      <option value="chill">速度｜悠閒</option>
+                      <option value="normal" selected>速度｜一般</option>
+                      <option value="fast">速度｜閃電</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down"></i>
+                  </div>
+                  <button class="btn btnSolid btnStart" data-level="L2"><i class="fa-solid fa-play"></i>開始</button>
+                </div>
+              </div>
+
+              <div class="levelCard">
+                <div class="lvTitle"><i class="fa-solid fa-scale-balanced"></i>Lv 3：同分母比大小</div>
+                <div class="lvDesc">同分母、真分數、分子分母 ≤ 20。先把 A、B 畫出來，再回答 A ? B。</div>
+                <div class="lvPick">
+                  <div class="selectWrap">
+                    <select class="selDiff" data-level="L3">
+                      <option value="easy">難度｜簡單</option>
+                      <option value="normal" selected>難度｜普通</option>
+                      <option value="hard">難度｜困難</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down"></i>
+                  </div>
+                  <div class="selectWrap">
+                    <select class="selSpeed" data-level="L3">
+                      <option value="chill">速度｜悠閒</option>
+                      <option value="normal" selected>速度｜一般</option>
+                      <option value="fast">速度｜閃電</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down"></i>
+                  </div>
+                  <button class="btn btnSolid btnStart" data-level="L3"><i class="fa-solid fa-play"></i>開始</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="sep"></div>
+            <div class="row">
+              <button id="btnBackIntro" class="btn btnGhost"><i class="fa-solid fa-arrow-left"></i>回輸入名字</button>
+            </div>
+          </div>
+
+          <aside class="sideCard">
+            <div class="sideHd">
+              <div class="t"><i class="fa-solid fa-ranking-star"></i>榮譽榜</div>
+              <button id="btnClearLB2" class="btn btnGhost" title="清除本機排行榜"><i class="fa-solid fa-broom"></i>清除</button>
+            </div>
+            <div class="sideBd">
+              <div class="lbControls">
+                <div class="selectWrap">
+                  <select id="lbFilter2">
+                    <option value="ALL" selected>顯示：全部關卡</option>
+                    <option value="L1">第一關｜幾分之幾</option>
+                    <option value="L2">第二關｜畫圖補分子</option>
+                    <option value="L3">第三關｜畫圖同分母比較</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="selectWrap">
+                  <select id="lbDiffFilter2">
+                    <option value="ALL" selected>難度：全部</option>
+                    <option value="easy">簡單</option>
+                    <option value="normal">普通</option>
+                    <option value="hard">困難</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down"></i>
+                </div>
+              </div>
+              <div class="lbList" id="lbList2"></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 3 -->
+    <section id="screenGame" class="screen">
+      <div class="gameShell">
+        <div class="hudRow">
+          <div class="row">
+            <div class="stat">
+              <i class="fa-solid fa-user"></i>
+              <div>
+                <div class="small">玩家</div>
+                <div id="hudName">—</div>
+              </div>
+            </div>
+            <div class="stat">
+              <i class="fa-solid fa-flag-checkered"></i>
+              <div>
+                <div class="small">關卡</div>
+                <div id="hudLevel">—</div>
+              </div>
+            </div>
+            <div class="stat">
+              <i class="fa-solid fa-fire"></i>
+              <div>
+                <div class="small">COMBO</div>
+                <div id="hudCombo">x1</div>
+              </div>
+            </div>
+            <div class="stat">
+              <i class="fa-solid fa-trophy"></i>
+              <div>
+                <div class="small">分數</div>
+                <div id="hudScore">0</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stat">
+            <i class="fa-solid fa-stopwatch"></i>
+            <div>
+              <div class="small">剩餘時間</div>
+              <div id="hudTime" class="timer">60.0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="progress"><div id="timeBar" class="bar"></div></div>
+
+        <div class="arena">
+          <div class="qaGrid">
+            <!-- LEFT -->
+            <div class="panel">
+              <div class="qTitle"><i class="fa-solid fa-image"></i><span id="qKind">題目</span></div>
+
+              <div class="stage">
+                <div class="drawShell">
+                  <div class="drawTop">
+                    <div class="drawLabel">
+                      <i class="fa-solid fa-pen-to-square" style="color:rgba(95,115,255,.95)"></i>
+                      <span id="drawTitle">畫圖區</span>
+                    </div>
+                    <div class="chip" id="drawChip">—</div>
+                  </div>
+
+                  <div class="drawHint" id="drawHint">點格子上色作答</div>
+                  <div class="drawBoard" id="drawBoard"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- RIGHT -->
+            <div class="panel rightCard">
+              <div class="qTitle"><i class="fa-solid fa-pen-nib"></i><span>請作答</span></div>
+              <div class="qText" id="qText">—</div>
+
+              <div id="answerArea"></div>
+
+              <div id="feedback" class="feed">
+                <div class="feedTop">
+                  <div class="feedMsg" id="feedMsg"><i class="fa-solid fa-circle-info"></i>—</div>
+                  <div style="font-weight:1000;color:rgba(15,23,42,.62)" id="feedMeta">—</div>
+                </div>
+                <div class="explain" id="feedExplain">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottomBar">
+          <button id="btnPause" class="btn btnGhost"><i class="fa-solid fa-pause"></i>暫停</button>
+          <button id="btnRestart" class="btn btnDanger"><i class="fa-solid fa-rotate-right"></i>重來</button>
+          <button id="btnBackMenu" class="btn btnGhost"><i class="fa-solid fa-layer-group"></i>回主選單</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Pause overlay -->
+  <div class="overlay" id="overlay">
+    <div class="pauseCard">
+      <div class="pauseTitle"><i class="fa-solid fa-pause"></i>暫停中 ⏸️</div>
+      <div class="pauseSub">時間停止、題目鎖住。想好了再回來一口氣連擊。</div>
+      <div class="pauseBtns">
+        <button id="btnResume" class="btn btnSolid"><i class="fa-solid fa-play"></i>繼續</button>
+        <button id="btnRestart2" class="btn btnDanger"><i class="fa-solid fa-rotate-right"></i>重來</button>
+        <button id="btnBackMenu2" class="btn btnGhost"><i class="fa-solid fa-layer-group"></i>回主選單</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const randInt = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const nowTs = () => Date.now();
+
+    function escapeHtml(s){
+      return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    }
+
+    /* ===== 分數上下表示（含空白分子） ===== */
+    function fracHTML(n, d, cls="big"){
+      return `
+        <span class="frac ${cls}">
+          <span class="top">${n}</span>
+          <span class="bar"></span>
+          <span class="bottom">${d}</span>
+        </span>
+      `;
+    }
+    function fracBlankHTML(d, cls="big"){
+      return `
+        <span class="frac blank ${cls}">
+          <span class="top"><span class="blankBox" aria-hidden="true"></span></span>
+          <span class="bar"></span>
+          <span class="bottom">${d}</span>
+        </span>
+      `;
+    }
+
+    const screens = {
+      intro: $("#screenIntro"),
+      menu: $("#screenMenu"),
+      game: $("#screenGame"),
+    };
+    function showScreen(key){
+      Object.values(screens).forEach(s => s.classList.remove("active"));
+      screens[key].classList.add("active");
+      renderLeaderboard();
+    }
+
+    const state = {
+      playerName: "",
+      level: null,
+      diff: "normal",
+      speed: "normal",
+      running: false,
+      paused: false,
+      timeLeft: 60.0,
+      score: 0,
+      combo: 0,
+      comboMult: 1,
+      q: null,
+      tickHandle: null,
+      lastTickAt: 0,
+      lockInput: false,
+
+      // Lv3 兩步驟：先送出畫圖，再回答比較
+      l3Step: "draw", // "draw" | "answer"
+
+      draw: {
+        mode: "none",
+        den: 0,
+        targetA: 0,
+        targetB: 0,
+        filledA: 0,
+        filledB: 0,
+        submitted: false
+      }
+    };
+
+    const CFG = {
+      timeStart: 60.0,
+      timeGain: 5.0,
+      timeLose: 5.0,
+      speedDelay: { chill: 900, normal: 520, fast: 220 },
+      scoreBase: { easy: 8, normal: 10, hard: 12 },
+      speedBonus: { chill: 1.0, normal: 1.05, fast: 1.10 },
+      comboMilestones: [
+        { need: 0, mult: 1 },
+        { need: 2, mult: 2 },
+        { need: 4, mult: 3 },
+        { need: 7, mult: 4 },
+      ],
+      LIMIT: 20
+    };
+
+    const nameInput = $("#nameInput");
+    const btnIntroGo = $("#btnIntroGo");
+    const btnBackIntro = $("#btnBackIntro");
+    const menuName = $("#menuName");
+
+    const hudName = $("#hudName");
+    const hudLevel = $("#hudLevel");
+    const hudCombo = $("#hudCombo");
+    const hudScore = $("#hudScore");
+    const hudTime = $("#hudTime");
+    const timeBar = $("#timeBar");
+
+    const qKind = $("#qKind");
+    const qText = $("#qText");
+
+    const drawTitle = $("#drawTitle");
+    const drawChip = $("#drawChip");
+    const drawHint = $("#drawHint");
+    const drawBoard = $("#drawBoard");
+
+    const answerArea = $("#answerArea");
+    const feedback = $("#feedback");
+    const feedMsg = $("#feedMsg");
+    const feedMeta = $("#feedMeta");
+    const feedExplain = $("#feedExplain");
+
+    const btnPause = $("#btnPause");
+    const btnRestart = $("#btnRestart");
+    const btnBackMenu = $("#btnBackMenu");
+
+    const overlay = $("#overlay");
+    const btnResume = $("#btnResume");
+    const btnRestart2 = $("#btnRestart2");
+    const btnBackMenu2 = $("#btnBackMenu2");
+
+    const toast = $("#toast");
+
+    const lbListA = $("#lbList");
+    const lbListB = $("#lbList2");
+    const lbFilterA = $("#lbFilter");
+    const lbDiffA = $("#lbDiffFilter");
+    const lbFilterB = $("#lbFilter2");
+    const lbDiffB = $("#lbDiffFilter2");
+    const btnClearA = $("#btnClearLB");
+    const btnClearB = $("#btnClearLB2");
+
+    function toastShow(msg){
+      toast.textContent = msg;
+      toast.classList.add("show");
+      setTimeout(()=> toast.classList.remove("show"), 1200);
+    }
+
+    function levelLabelLong(lv){
+      if(lv==="L1") return "第一關｜幾分之幾";
+      if(lv==="L2") return "第二關｜畫圖補分子";
+      if(lv==="L3") return "第三關｜畫圖同分母比較";
+      return "—";
+    }
+    function diffLabel(d){ return d==="easy" ? "簡單" : d==="hard" ? "困難" : "普通"; }
+    function speedLabel(s){ return s==="chill" ? "悠閒" : s==="fast" ? "閃電" : "一般"; }
+
+    function updateComboMultiplier(){
+      let mult = 1;
+      for(const m of CFG.comboMilestones){
+        if(state.combo >= m.need) mult = m.mult;
+      }
+      state.comboMult = mult;
+      hudCombo.textContent = `x${mult}`;
+    }
+
+    const LB_KEY = "JM_G3_U8_FRACTIONS_LB_LIGHT_DRAW_L2UNDO_L3QA_FRACSTACK_V3";
+    function loadLB(){
+      try{
+        const raw = localStorage.getItem(LB_KEY);
+        const arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? arr : [];
+      }catch(e){ return []; }
+    }
+    function saveLB(arr){ localStorage.setItem(LB_KEY, JSON.stringify(arr)); }
+    function addLB(entry){
+      const lb = loadLB();
+      lb.push(entry);
+      lb.sort((a,b)=> (b.score - a.score) || (a.ts - b.ts));
+      saveLB(lb.slice(0,80));
+    }
+    function clearLB(){ localStorage.removeItem(LB_KEY); }
+
+    function starsFor(score, diff){
+      const t = diff==="easy" ? [120, 220, 320] :
+                diff==="hard" ? [160, 280, 420] :
+                                [140, 250, 380];
+      if(score >= t[2]) return 3;
+      if(score >= t[1]) return 2;
+      if(score >= t[0]) return 1;
+      return 0;
+    }
+    function starsText(k){ return k<=0 ? "—" : "★".repeat(k); }
+
+    function renderLeaderboard(){
+      const lb = loadLB();
+
+      if(lbFilterB && lbFilterA && lbFilterB.value !== lbFilterA.value) lbFilterB.value = lbFilterA.value;
+      if(lbDiffB && lbDiffA && lbDiffB.value !== lbDiffA.value) lbDiffB.value = lbDiffA.value;
+
+      const fLv = lbFilterA ? lbFilterA.value : "ALL";
+      const fDf = lbDiffA ? lbDiffA.value : "ALL";
+
+      const rows = lb.filter(x=>{
+        const okLv = (fLv==="ALL") || (x.level===fLv);
+        const okDf = (fDf==="ALL") || (x.diff===fDf);
+        return okLv && okDf;
+      }).slice(0,10);
+
+      const renderTo = (el)=>{
+        if(!el) return;
+        el.innerHTML = "";
+        if(rows.length === 0){
+          el.innerHTML = `
+            <div class="lbItem">
+              <div class="lbLeft">
+                <div class="rank"><i class="fa-solid fa-ghost"></i></div>
+                <div>
+                  <div class="lbName">目前沒有紀錄</div>
+                  <div class="lbMeta">把一局打到「時間到」，榮譽榜就會亮起來 ✨</div>
+                </div>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        rows.forEach((x, idx)=>{
+          const stars = starsFor(x.score, x.diff);
+          const date = new Date(x.ts);
+          const mm = String(date.getMonth()+1).padStart(2,"0");
+          const dd = String(date.getDate()).padStart(2,"0");
+          const hh = String(date.getHours()).padStart(2,"0");
+          const mi = String(date.getMinutes()).padStart(2,"0");
+          const meta = `${levelLabelLong(x.level)}｜${diffLabel(x.diff)}｜速度 ${speedLabel(x.speed)}｜${mm}/${dd} ${hh}:${mi}`;
+          const icon = idx===0 ? "fa-crown" : idx===1 ? "fa-medal" : idx===2 ? "fa-award" : "fa-hashtag";
+          el.insertAdjacentHTML("beforeend", `
+            <div class="lbItem">
+              <div class="lbLeft">
+                <div class="rank"><i class="fa-solid ${icon}"></i></div>
+                <div style="min-width:0">
+                  <div class="lbName" title="${escapeHtml(x.name)}">${escapeHtml(x.name)}</div>
+                  <div class="lbMeta">${escapeHtml(meta)}</div>
+                </div>
+              </div>
+              <div class="lbRight">
+                <div class="lbScore">${x.score}</div>
+                <div class="lbStars">${starsText(stars)}</div>
+              </div>
+            </div>
+          `);
+        });
+      };
+
+      renderTo(lbListA);
+      renderTo(lbListB);
+    }
+
+    /* ===== Lv1 視覺（SVG） ===== */
+    function sectorPath(cx,cy,r,a0,a1){
+      const x0 = cx + r*Math.cos(a0), y0 = cy + r*Math.sin(a0);
+      const x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
+      const large = (a1-a0) > Math.PI ? 1 : 0;
+      return `M ${cx} ${cy} L ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} Z`;
+    }
+    function svgPie(n,d){
+      const size = 260;
+      const cx = size/2, cy = size/2, r = 96;
+      const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+      svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
+
+      const halo = document.createElementNS(svg.namespaceURI,"circle");
+      halo.setAttribute("cx",cx); halo.setAttribute("cy",cy); halo.setAttribute("r",r+8);
+      halo.setAttribute("fill","rgba(255,211,74,.18)");
+      svg.appendChild(halo);
+
+      const startAngle = -Math.PI/2;
+      for(let i=0;i<d;i++){
+        const a0 = startAngle + (i/d)*Math.PI*2;
+        const a1 = startAngle + ((i+1)/d)*Math.PI*2;
+        const p = document.createElementNS(svg.namespaceURI,"path");
+        p.setAttribute("d", sectorPath(cx,cy,r,a0,a1));
+        const fill = (i < n) ? "rgba(95,115,255,.82)" : "rgba(15,23,42,.08)";
+        p.setAttribute("fill", fill);
+        p.setAttribute("stroke","rgba(15,23,42,.22)");
+        p.setAttribute("stroke-width","2");
+        svg.appendChild(p);
+      }
+
+      const ring = document.createElementNS(svg.namespaceURI,"circle");
+      ring.setAttribute("cx",cx); ring.setAttribute("cy",cy); ring.setAttribute("r",r);
+      ring.setAttribute("fill","none");
+      ring.setAttribute("stroke","rgba(15,23,42,.12)");
+      ring.setAttribute("stroke-width","6");
+      svg.appendChild(ring);
+
+      return svg;
+    }
+    function svgBar(n,d){
+      const w=260,h=260, pad=24;
+      const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+      svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+
+      const rect = document.createElementNS(svg.namespaceURI,"rect");
+      rect.setAttribute("x", pad);
+      rect.setAttribute("y", 88);
+      rect.setAttribute("width", w-pad*2);
+      rect.setAttribute("height", 88);
+      rect.setAttribute("rx", 18);
+      rect.setAttribute("fill", "rgba(15,23,42,.06)");
+      rect.setAttribute("stroke", "rgba(15,23,42,.20)");
+      rect.setAttribute("stroke-width","5");
+      svg.appendChild(rect);
+
+      const innerX = pad+8, innerY=96, innerW=w-pad*2-16, innerH=72;
+      const segW = innerW / d;
+
+      for(let i=0;i<d;i++){
+        const rct = document.createElementNS(svg.namespaceURI,"rect");
+        rct.setAttribute("x", innerX + i*segW);
+        rct.setAttribute("y", innerY);
+        rct.setAttribute("width", Math.max(2, segW - 1.2));
+        rct.setAttribute("height", innerH);
+        rct.setAttribute("rx", 8);
+        rct.setAttribute("fill", i<n ? "rgba(95,115,255,.82)" : "rgba(15,23,42,.08)");
+        svg.appendChild(rct);
+      }
+
+      return svg;
+    }
+    function renderL1Visual(v){
+      drawBoard.innerHTML = "";
+      drawTitle.textContent = "看圖（已塗色）";
+      drawChip.innerHTML = `${fracHTML(v.n, v.d, "soft")}`;
+      drawHint.textContent = "Lv1：左側是題目圖（已塗色），右側選答案。";
+
+      const box = document.createElement("div");
+      box.className = "barWrap";
+      box.innerHTML = `
+        <div class="barTitle"><span><i class="fa-solid fa-image" style="color:rgba(95,115,255,.95)"></i> 題目圖</span><small>看分母幾份、塗色幾份</small></div>
+      `;
+      const inner = document.createElement("div");
+      inner.style.display = "grid";
+      inner.style.placeItems = "center";
+      inner.style.padding = "6px 0 10px";
+      inner.appendChild(v.type==="bar" ? svgBar(v.n,v.d) : svgPie(v.n,v.d));
+      box.appendChild(inner);
+      drawBoard.appendChild(box);
+
+      state.draw.mode="none";
+      state.draw.submitted=false;
+      state.l3Step="draw";
+    }
+
+    /* ===== 題庫 ===== */
+    function fracKey(n,d){ return `${n}/${d}`; }
+
+    function genL1(diff){
+      const dMax = diff==="easy" ? 8 : diff==="hard" ? 12 : 10;
+      let d = randInt(2, dMax);
+      let n = randInt(1, d-1);
+
+      const correctKey = fracKey(n,d);
+
+      const opts = new Set([correctKey]);
+      while(opts.size < 4){
+        let dn = d, nn = n;
+        const mode = randInt(1,4);
+        if(mode===1){ nn = clamp(nn + pick([-2,-1,1,2]), 1, dn-1); }
+        else if(mode===2){ dn = clamp(dn + pick([-2,-1,1,2]), 2, 12); nn = clamp(nn, 1, dn-1); }
+        else if(mode===3){ nn = clamp(dn - nn, 1, dn-1); }
+        else{
+          const k = pick([2,3]);
+          dn = clamp(dn * k, 2, 12);
+          nn = clamp(nn * k + pick([-1,1]), 1, dn-1);
+        }
+        opts.add(fracKey(nn,dn));
+      }
+      const options = Array.from(opts);
+      for(let i=options.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [options[i],options[j]]=[options[j],options[i]];
+      }
+
+      return {
+        level:"L1",
+        kind:"看圖→幾分之幾",
+        text:"這張圖塗色部分代表幾分之幾？",
+        options,
+        correct: correctKey,
+        explain:`整體分成 ${d} 份，塗色 ${n} 份，所以是 ${fracHTML(n,d)}。`,
+        visual: { n, d, type: pick(["pie","bar"]) },
+        draw: { mode:"none" }
+      };
+    }
+
+    function genL2(diff){
+      const dMax = diff==="easy" ? 8 : diff==="hard" ? 20 : 12;
+      const d = randInt(2, dMax);
+      const n = randInt(1, d-1); // 真分數
+      const miss = d - n;
+
+      return {
+        level:"L2",
+        kind:"畫圖補分子（補成 1）",
+        text:`請在左邊畫出缺的分數：${fracHTML(n,d)} + ${fracBlankHTML(d)} = 1`,
+        correct: String(miss),
+        explain:`同分母補成 1：分子加起來要等於分母。分母 ${d}，已經有 ${n}，所以還差 ${d}-${n}=${miss}。`,
+        draw: { mode:"one", den:d, targetA:miss }
+      };
+    }
+
+    function genL3(diff){
+      const dMax = diff==="easy" ? 10 : diff==="hard" ? 20 : 14;
+      const d = randInt(2, dMax);
+      let a = randInt(1, d-1);
+      let b = randInt(1, d-1);
+      if(b===a) b = clamp(b + pick([-1,1]), 1, d-1);
+
+      const sign = a>b ? ">" : "<";
+      return {
+        level:"L3",
+        kind:"畫圖 → 回答比較（同分母）",
+        text:`先把左邊畫出來：A=${fracHTML(a,d)}，B=${fracHTML(b,d)}。<br>畫好後再回答：A ? B`,
+        correct: sign,
+        explain:`同分母比較看分子：A 的分子 ${a}、B 的分子 ${b}，所以 A ${sign} B。`,
+        draw: { mode:"two", den:d, targetA:a, targetB:b }
+      };
+    }
+
+    /* ===== Lv2/Lv3 畫圖 ===== */
+    function buildBarDraft(container, titleHTML, den, key){
+      const wrap = document.createElement("div");
+      wrap.className = "barWrap";
+      wrap.innerHTML = `
+        <div class="barTitle">
+          <span>${titleHTML}</span>
+          <small>分母 ${den} 格</small>
+        </div>
+      `;
+      const grid = document.createElement("div");
+      grid.className = "barGrid";
+
+      for(let i=0;i<den;i++){
+        const seg = document.createElement("div");
+        seg.className = "seg";
+        seg.title = `第 ${i+1} 格（點一下上色）`;
+
+        seg.addEventListener("click", ()=>{
+          if(!state.running || state.paused || state.lockInput) return;
+          if(state.draw.submitted) return;
+
+          // ✅ Lv2：可消除（再點一次可取消）
+          // ✅ Lv3：仍維持不可消除（畫完回頭會亂掉比較題）
+          const canErase = (state.level==="L2");
+
+          if(seg.classList.contains("on")){
+            if(!canErase) return;
+            seg.classList.remove("on");
+            if(key==="A") state.draw.filledA = Math.max(0, state.draw.filledA - 1);
+            else state.draw.filledB = Math.max(0, state.draw.filledB - 1);
+            syncDrawChip();
+            return;
+          }
+
+          seg.classList.add("on");
+          if(key==="A") state.draw.filledA++;
+          else state.draw.filledB++;
+          syncDrawChip();
+        });
+
+        grid.appendChild(seg);
+      }
+
+      wrap.appendChild(grid);
+      container.appendChild(wrap);
+    }
+
+    function syncDrawChip(){
+      if(state.level==="L2"){
+        drawChip.innerHTML = `你已上色 ${state.draw.filledA}/${state.draw.den}`;
+      }else if(state.level==="L3"){
+        drawChip.innerHTML = `A ${state.draw.filledA}/${state.draw.den}｜B ${state.draw.filledB}/${state.draw.den}`;
+      }
+    }
+
+    function lockAllSegments(){
+      $$("#drawBoard .seg").forEach(s=> s.classList.add("locked"));
+    }
+
+    function renderDrawBoard(q){
+      drawBoard.innerHTML = "";
+      state.draw.submitted = false;
+      state.draw.den = q.draw.den;
+      state.draw.filledA = 0;
+      state.draw.filledB = 0;
+      state.l3Step = "draw";
+
+      if(q.level==="L2"){
+        drawTitle.textContent = "Lv2 畫圖作答（可消除）";
+        drawHint.textContent = "點格子上色：上色幾格＝分子幾。畫錯可以點回去消除。";
+        state.draw.mode = "one";
+        state.draw.targetA = q.draw.targetA;
+        state.draw.targetB = 0;
+
+        buildBarDraft(drawBoard, `缺的分子：${fracBlankHTML(q.draw.den, "soft")}`, q.draw.den, "A");
+        syncDrawChip();
+      }
+
+      if(q.level==="L3"){
+        drawTitle.textContent = "Lv3 先畫圖（不可消除）";
+        drawHint.textContent = "先把 A、B 都畫出來（上色分子格數）。送出後再回答 A ? B。";
+        state.draw.mode = "two";
+        state.draw.targetA = q.draw.targetA;
+        state.draw.targetB = q.draw.targetB;
+
+        buildBarDraft(drawBoard, `A：${fracHTML(q.draw.targetA, q.draw.den, "soft")}`, q.draw.den, "A");
+        buildBarDraft(drawBoard, `B：${fracHTML(q.draw.targetB, q.draw.den, "soft")}`, q.draw.den, "B");
+        syncDrawChip();
+      }
+    }
+
+    /* ===== 右側答題 UI ===== */
+    function parseFracKey(s){
+      const t = String(s).trim().replaceAll("／","/").replaceAll(" ","");
+      const [n,d] = t.split("/").map(x=>Number(x));
+      if(!Number.isFinite(n) || !Number.isFinite(d)) return null;
+      return {n,d,key:`${n}/${d}`};
+    }
+
+    function renderAnswerUI(q){
+      answerArea.innerHTML = "";
+
+      if(q.level==="L1"){
+        const box = document.createElement("div");
+        box.className = "choices";
+
+        q.options.forEach((optKey, idx)=>{
+          const fd = parseFracKey(optKey);
+          const show = fd ? fracHTML(fd.n, fd.d) : escapeHtml(optKey);
+
+          const b = document.createElement("button");
+          b.className = "choiceBtn";
+          b.dataset.key = optKey;
+          b.innerHTML = `<span>${show}</span><span class="kbd">${idx+1}</span>`;
+          b.addEventListener("click", ()=> submitChoice(optKey, b));
+          box.appendChild(b);
+        });
+
+        answerArea.appendChild(box);
+        return;
+      }
+
+      // Lv2：直接送出畫圖
+      if(q.level==="L2"){
+        const box = document.createElement("div");
+        box.className = "drawSubmitBox";
+        box.innerHTML = `
+          <div class="drawCounts">
+            <div class="pill"><i class="fa-solid fa-eraser" style="color:rgba(95,115,255,.95)"></i>
+              畫圖作答：<b>可消除</b>
+            </div>
+            <div class="pill" id="needPill">—</div>
+          </div>
+          <button class="btn btnSolid" id="btnSubmitDraw"><i class="fa-solid fa-paper-plane"></i>送出畫圖（Enter）</button>
+          <div class="pill" style="opacity:.92">小提醒：畫錯就點回去消除，然後再送出 ✨</div>
+        `;
+        answerArea.appendChild(box);
+        $("#needPill").innerHTML = `目標：上色 <b>${q.draw.targetA}</b> 格（分母 ${q.draw.den}）`;
+        $("#btnSubmitDraw").addEventListener("click", submitDrawing);
+        return;
+      }
+
+      // Lv3：兩步驟
+      if(q.level==="L3"){
+        const box = document.createElement("div");
+        box.className = "drawSubmitBox";
+        box.innerHTML = `
+          <div class="drawCounts">
+            <div class="pill"><i class="fa-solid fa-pen-to-square" style="color:rgba(95,115,255,.95)"></i>
+              Step 1：先送出畫圖
+            </div>
+            <div class="pill" id="needPill3">—</div>
+          </div>
+          <button class="btn btnSolid" id="btnSubmitDraw3"><i class="fa-solid fa-paper-plane"></i>送出畫圖（Enter）</button>
+
+          <div class="sep" style="margin:10px 0;opacity:.7"></div>
+
+          <div class="drawCounts">
+            <div class="pill"><i class="fa-solid fa-scale-balanced" style="color:rgba(95,115,255,.95)"></i>
+              Step 2：回答 A ? B
+            </div>
+            <div class="pill" id="ansHint3">（先完成 Step 1）</div>
+          </div>
+
+          <div class="choices" id="l3Choices" style="opacity:.55;pointer-events:none">
+            <button class="choiceBtn" data-cmp=">"><span style="display:flex;align-items:center;gap:10px">
+              <span id="l3A1">A</span><span style="font-size:20px">></span><span id="l3B1">B</span>
+            </span><span class="kbd">1</span></button>
+
+            <button class="choiceBtn" data-cmp="<"><span style="display:flex;align-items:center;gap:10px">
+              <span id="l3A2">A</span><span style="font-size:20px"><</span><span id="l3B2">B</span>
+            </span><span class="kbd">2</span></button>
+
+            <button class="choiceBtn" data-cmp="="><span style="display:flex;align-items:center;gap:10px">
+              <span id="l3A3">A</span><span style="font-size:20px">=</span><span id="l3B3">B</span>
+            </span><span class="kbd">3</span></button>
+          </div>
+        `;
+        answerArea.appendChild(box);
+
+        $("#needPill3").innerHTML = `目標：A 上色 <b>${q.draw.targetA}</b> 格｜B 上色 <b>${q.draw.targetB}</b> 格`;
+        $("#btnSubmitDraw3").addEventListener("click", submitDrawing);
+
+        // 把 A/B 用分數上下排版呈現
+        $("#l3A1").innerHTML = `A=${fracHTML(q.draw.targetA, q.draw.den, "soft")}`;
+        $("#l3B1").innerHTML = `B=${fracHTML(q.draw.targetB, q.draw.den, "soft")}`;
+        $("#l3A2").innerHTML = $("#l3A1").innerHTML;
+        $("#l3B2").innerHTML = $("#l3B1").innerHTML;
+        $("#l3A3").innerHTML = $("#l3A1").innerHTML;
+        $("#l3B3").innerHTML = $("#l3B1").innerHTML;
+
+        $$("#l3Choices .choiceBtn").forEach(btn=>{
+          btn.addEventListener("click", ()=>{
+            if(state.level!=="L3" || state.l3Step!=="answer") return;
+            submitL3Compare(btn.dataset.cmp, btn);
+          });
+        });
+
+        return;
+      }
+    }
+
+    function normalizeAnswer(s){
+      return String(s).trim().replaceAll("／","/").replaceAll(" ","");
+    }
+
+    function applyResult(correct, extraExplain=""){
+      const q = state.q;
+
+      if(correct){
+        state.combo += 1;
+        updateComboMultiplier();
+
+        const base = CFG.scoreBase[state.diff];
+        const speedM = CFG.speedBonus[state.speed];
+        const gained = Math.round(base * state.comboMult * speedM);
+
+        state.score += gained;
+        state.timeLeft = clamp(state.timeLeft + CFG.timeGain, 0, 99.9);
+
+        feedback.style.display = "block";
+        feedback.classList.add("show","good");
+        feedback.classList.remove("bad");
+        feedMsg.innerHTML = `<i class="fa-solid fa-circle-check" style="color:var(--good)"></i><span>答對！+${gained} 分</span>`;
+        feedMeta.textContent = `時間 +${CFG.timeGain}s｜Combo x${state.comboMult}`;
+        feedExplain.innerHTML = (q.explain ? q.explain : "漂亮！") + (extraExplain ? `<br>${extraExplain}` : "");
+      }else{
+        state.combo = 0;
+        updateComboMultiplier();
+
+        state.timeLeft = clamp(state.timeLeft - CFG.timeLose, 0, 99.9);
+
+        feedback.style.display = "block";
+        feedback.classList.add("show","bad");
+        feedback.classList.remove("good");
+        feedMsg.innerHTML = `<i class="fa-solid fa-circle-xmark" style="color:var(--bad)"></i><span>答錯了</span>`;
+        feedMeta.textContent = `時間 -${CFG.timeLose}s｜Combo 歸零`;
+        feedExplain.innerHTML = (q.level==="L2")
+          ? `正確目標分子：<b>${escapeHtml(q.correct)}</b>（你畫了 ${state.draw.filledA}）<br>${q.explain || ""}`
+          : `正確目標：A <b>${state.draw.targetA}</b>、B <b>${state.draw.targetB}</b>（你畫了 A ${state.draw.filledA}、B ${state.draw.filledB}）<br>${q.explain || ""}`;
+        if(extraExplain) feedExplain.innerHTML += `<br>${extraExplain}`;
+      }
+
+      refreshHUD();
+
+      if(state.timeLeft <= 0){
+        endGame(true);
+        return;
+      }
+
+      const delay = CFG.speedDelay[state.speed];
+      setTimeout(()=>{
+        if(!state.running || state.paused) { state.lockInput = false; return; }
+        nextQuestion();
+      }, delay);
+    }
+
+    function submitChoice(rawKey, btnEl){
+      if(!state.running || state.paused || state.lockInput) return;
+      state.lockInput = true;
+
+      const q = state.q;
+      const ans = normalizeAnswer(rawKey);
+      const correctStr = normalizeAnswer(q.correct);
+      const correct = (ans === correctStr);
+
+      $$("#answerArea .choiceBtn").forEach(b=>{
+        const k = normalizeAnswer(b.dataset.key || "");
+        if(k === correctStr) b.classList.add("correct");
+      });
+      if(btnEl){
+        const k = normalizeAnswer(btnEl.dataset.key || "");
+        if(k !== correctStr) btnEl.classList.add("wrong");
+      }
+
+      applyResult(correct);
+    }
+
+    // Lv3：回答 A ? B
+    function submitL3Compare(symbol, btnEl){
+      if(!state.running || state.paused || state.lockInput) return;
+      if(state.level!=="L3" || state.l3Step!=="answer") return;
+      state.lockInput = true;
+
+      const q = state.q;
+      const need = q.correct; // ">" or "<"
+      const correctCmp = (symbol === need);
+
+      // 視覺標記
+      $$("#l3Choices .choiceBtn").forEach(b=>{
+        if(b.dataset.cmp === need) b.classList.add("correct");
+      });
+      if(btnEl && btnEl.dataset.cmp !== need) btnEl.classList.add("wrong");
+
+      // 最終正確：畫圖正確 + 比較正確
+      const drawCorrect = (state.draw.filledA === state.draw.targetA) && (state.draw.filledB === state.draw.targetB);
+      const finalCorrect = drawCorrect && correctCmp;
+
+      const extra = drawCorrect
+        ? `畫圖正確 ✅ 你選的是「${symbol}」。`
+        : `你的畫圖不符合目標（A 應為 ${state.draw.targetA}、B 應為 ${state.draw.targetB}）。你選的是「${symbol}」。`;
+
+      applyResult(finalCorrect, extra);
+    }
+
+    // Lv2：送出畫圖；Lv3：Step1 送出畫圖並進入 Step2
+    function submitDrawing(){
+      if(!state.running || state.paused || state.lockInput) return;
+      if(state.q.level==="L1") return;
+
+      // Lv3 Step2 時，Enter 也可以直接送出比較：這裡不處理（由鍵盤邏輯處理）
+      if(state.level==="L3" && state.l3Step==="answer") return;
+
+      state.lockInput = true;
+      state.draw.submitted = true;
+      lockAllSegments();
+
+      const q = state.q;
+
+      if(q.level==="L2"){
+        // Lv2：直接判斷
+        const correct = (state.draw.filledA === state.draw.targetA);
+        applyResult(correct);
+        return;
+      }
+
+      if(q.level==="L3"){
+        // Lv3：先確認畫圖 → 進入回答比較
+        state.l3Step = "answer";
+        state.lockInput = false;
+
+        const choices = $("#l3Choices");
+        const hint = $("#ansHint3");
+        if(choices){
+          choices.style.opacity = "1";
+          choices.style.pointerEvents = "auto";
+        }
+        if(hint){
+          hint.innerHTML = `請選：A ? B（可按 1~3）`;
+        }
+
+        feedback.style.display = "block";
+        feedback.classList.add("show");
+        feedback.classList.remove("good","bad");
+        feedMsg.innerHTML = `<i class="fa-solid fa-circle-info" style="color:rgba(95,115,255,.95)"></i><span>畫圖已鎖定，來回答比較題！</span>`;
+        feedMeta.textContent = "Step 2：選擇 > / < / =";
+        feedExplain.innerHTML = `提示：同分母比較看<b>分子</b>。`;
+
+        return;
+      }
+    }
+
+    function refreshHUD(){
+      hudName.textContent = state.playerName || "—";
+      hudLevel.textContent = `${levelLabelLong(state.level)}｜${diffLabel(state.diff)}｜速度 ${speedLabel(state.speed)}`;
+      hudScore.textContent = String(state.score);
+
+      const t = state.timeLeft;
+      hudTime.textContent = t.toFixed(1);
+      hudTime.classList.remove("good","warn","bad");
+      if(t >= 25) hudTime.classList.add("good");
+      else if(t >= 10) hudTime.classList.add("warn");
+      else hudTime.classList.add("bad");
+
+      const p = clamp(t / CFG.timeStart, 0, 1);
+      timeBar.style.transform = `scaleX(${p})`;
+    }
+
+    function nextQuestion(){
+      feedback.classList.remove("show","good","bad");
+      feedback.style.display = "none";
+      state.lockInput = false;
+
+      let q;
+      if(state.level==="L1") q = genL1(state.diff);
+      if(state.level==="L2") q = genL2(state.diff);
+      if(state.level==="L3") q = genL3(state.diff);
+      state.q = q;
+
+      qKind.textContent = q.kind;
+      qText.innerHTML = q.text; // 分數一上一下
+
+      if(q.level==="L1"){
+        renderL1Visual(q.visual);
+      }else{
+        renderDrawBoard(q);
+        drawChip.innerHTML = (q.level==="L2") ? "開始畫吧（可消除）" : "開始畫吧（不可消除）";
+      }
+
+      renderAnswerUI(q);
+    }
+
+    function startGame(level, diff, speed){
+      state.level = level;
+      state.diff = diff;
+      state.speed = speed;
+
+      state.running = true;
+      state.paused = false;
+      state.timeLeft = CFG.timeStart;
+      state.score = 0;
+      state.combo = 0;
+      updateComboMultiplier();
+      state.lockInput = false;
+      state.l3Step = "draw";
+
+      showScreen("game");
+      refreshHUD();
+      nextQuestion();
+
+      stopTick();
+      state.lastTickAt = performance.now();
+      state.tickHandle = requestAnimationFrame(tick);
+
+      btnPause.innerHTML = `<i class="fa-solid fa-pause"></i>暫停`;
+    }
+
+    function stopTick(){
+      if(state.tickHandle){
+        cancelAnimationFrame(state.tickHandle);
+        state.tickHandle = null;
+      }
+    }
+
+    function tick(ts){
+      if(!state.running) return;
+
+      if(!state.paused){
+        const dt = (ts - state.lastTickAt) / 1000;
+        state.lastTickAt = ts;
+        state.timeLeft = clamp(state.timeLeft - dt, 0, 99.9);
+        refreshHUD();
+        if(state.timeLeft <= 0){
+          endGame(true);
+          return;
+        }
+      }else{
+        state.lastTickAt = ts;
+      }
+      state.tickHandle = requestAnimationFrame(tick);
+    }
+
+    function endGame(writeLB){
+      state.running = false;
+      stopTick();
+      overlay.classList.remove("show");
+      state.paused = false;
+
+      if(writeLB){
+        addLB({
+          name: state.playerName,
+          level: state.level,
+          diff: state.diff,
+          speed: state.speed,
+          score: state.score,
+          ts: nowTs()
+        });
+      }
+
+      const s = starsFor(state.score, state.diff);
+      toastShow(`時間到！分數 ${state.score}｜星等 ${starsText(s)}`);
+      showScreen("menu");
+    }
+
+    function pauseGame(){
+      if(!state.running || state.paused) return;
+      state.paused = true;
+      overlay.classList.add("show");
+      btnPause.innerHTML = `<i class="fa-solid fa-play"></i>繼續`;
+    }
+    function resumeGame(){
+      if(!state.running || !state.paused) return;
+      state.paused = false;
+      overlay.classList.remove("show");
+      btnPause.innerHTML = `<i class="fa-solid fa-pause"></i>暫停`;
+    }
+    function restartSame(){
+      if(!state.level) return;
+      startGame(state.level, state.diff, state.speed);
+    }
+    function backToMenuNoWrite(){
+      state.running = false;
+      stopTick();
+      state.paused = false;
+      overlay.classList.remove("show");
+      toastShow("已回主選單（本局不寫入榮譽榜）");
+      showScreen("menu");
+    }
+
+    function validateName(){
+      const nm = nameInput.value.trim();
+      if(!nm) return null;
+      return nm.replace(/\s+/g,"").slice(0,14);
+    }
+
+    $("#btnIntroGo").addEventListener("click", ()=>{
+      const nm = validateName();
+      if(!nm){
+        nameInput.focus();
+        toastShow("名字先填一下～");
+        return;
+      }
+      state.playerName = nm;
+      menuName.textContent = nm;
+      toastShow(`嗨 ${nm}，開局。`);
+      showScreen("menu");
+    });
+
+    nameInput.addEventListener("keydown",(e)=>{
+      if(e.key==="Enter"){ e.preventDefault(); $("#btnIntroGo").click(); }
+    });
+
+    $("#btnBackIntro").addEventListener("click", ()=>{
+      showScreen("intro");
+      setTimeout(()=> nameInput.focus(), 120);
+    });
+
+    $$(".btnStart").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        if(!state.playerName){
+          showScreen("intro");
+          setTimeout(()=> nameInput.focus(), 120);
+          toastShow("先輸入名字再開打～");
+          return;
+        }
+        const lv = btn.dataset.level;
+        const diff = document.querySelector(`.selDiff[data-level="${lv}"]`).value;
+        const speed = document.querySelector(`.selSpeed[data-level="${lv}"]`).value;
+        startGame(lv, diff, speed);
+      });
+    });
+
+    $("#btnPause").addEventListener("click", ()=> state.paused ? resumeGame() : pauseGame());
+    $("#btnRestart").addEventListener("click", restartSame);
+    $("#btnBackMenu").addEventListener("click", backToMenuNoWrite);
+
+    $("#btnResume").addEventListener("click", resumeGame);
+    $("#btnRestart2").addEventListener("click", ()=>{
+      overlay.classList.remove("show");
+      state.paused = false;
+      restartSame();
+    });
+    $("#btnBackMenu2").addEventListener("click", backToMenuNoWrite);
+
+    function wireLB(filterEl, diffEl){
+      if(filterEl) filterEl.addEventListener("change", ()=>{
+        if(lbFilterA && filterEl !== lbFilterA) lbFilterA.value = filterEl.value;
+        renderLeaderboard();
+      });
+      if(diffEl) diffEl.addEventListener("change", ()=>{
+        if(lbDiffA && diffEl !== lbDiffA) lbDiffA.value = diffEl.value;
+        renderLeaderboard();
+      });
+    }
+    wireLB(lbFilterA, lbDiffA);
+    wireLB(lbFilterB, lbDiffB);
+
+    function wireClear(btn){
+      if(!btn) return;
+      btn.addEventListener("click", ()=>{
+        if(confirm("要清除本機榮譽榜嗎？（清除後無法復原）")){
+          clearLB();
+          renderLeaderboard();
+          toastShow("榮譽榜已清除");
+        }
+      });
+    }
+    wireClear(btnClearA);
+    wireClear(btnClearB);
+
+    // 鍵盤：Lv1 1~4；Lv2 Enter 送出；Lv3 Step1 Enter 送出畫圖，Step2 1~3 選擇
+    window.addEventListener("keydown",(e)=>{
+      if(e.key==="Escape" && state.running){
+        state.paused ? resumeGame() : pauseGame();
+        return;
+      }
+      if(!state.running || state.paused) return;
+
+      if(state.level==="L1"){
+        const k = e.key;
+        if(k==="1"||k==="2"||k==="3"||k==="4"){
+          const idx = Number(k)-1;
+          const btns = $$("#answerArea .choiceBtn");
+          if(btns[idx]) btns[idx].click();
+        }
+      }
+
+      if(state.level==="L2" && e.key==="Enter"){
+        e.preventDefault();
+        const btn = $("#btnSubmitDraw");
+        if(btn) btn.click();
+      }
+
+      if(state.level==="L3"){
+        if(state.l3Step==="draw" && e.key==="Enter"){
+          e.preventDefault();
+          const btn = $("#btnSubmitDraw3");
+          if(btn) btn.click();
+        }else if(state.l3Step==="answer"){
+          const k = e.key;
+          if(k==="1"||k==="2"||k==="3"){
+            const idx = Number(k)-1;
+            const btns = $$("#l3Choices .choiceBtn");
+            if(btns[idx]) btns[idx].click();
+          }
+        }
+      }
+    });
+
+    function init(){
+      showScreen("intro");
+      renderLeaderboard();
+      setTimeout(()=> nameInput.focus(), 220);
+    }
+    init();
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
